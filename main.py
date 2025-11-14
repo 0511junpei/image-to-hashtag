@@ -5,16 +5,13 @@ from google.api_core.exceptions import GoogleAPICallError
 
 app = Flask(__name__)
 
-vision_client = vision.ImageAnnotatorClient()
-
-translate_client = translate.TranslationServiceClient()
-
 def detect_labels(image_base64):
     image = vision.Image(content=image_base64)
     features = [
         vision.Feature(type_=vision.Feature.Type.LABEL_DETECTION, max_results=15)
     ]
     request_body = vision.AnnotateImageRequest(image=image, features=features)
+    vision_client = vision.ImageAnnotatorClient()
     response = vision_client.annotate_image(request=request_body)
 
     labels = []
@@ -24,11 +21,14 @@ def detect_labels(image_base64):
     return labels
 
 def translate_to_japanese(texts):
-    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    TRANSLATE_PARENT = f"projects/{PROJECT_ID}/locations/global"
-
     if not texts:
         return[]
+    
+    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    TRANSLATE_PARENT = f"projects/{PROJECT_ID}/locations/global"
+    print(f"DEBUG: Using PROJECT_ID: '{PROJECT_ID}'")
+
+    translate_client = translate.TranslationServiceClient()
     
     try:
         response = translate_client.translate_text(
